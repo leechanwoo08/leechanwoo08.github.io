@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인 일정</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 10px;
+      background: linear-gradient(135deg, #cfe9ff, #e6f2ff);
+    }
+
+    .calendar {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header button {
+      border: none;
+      background: #4a90e2;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .days, .dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+    }
+
+    .days div {
+      font-weight: bold;
+      margin: 5px 0;
+      color: #4a90e2;
+      font-size: 12px;
+    }
+
+    .dates div {
+      padding: 8px;
+      margin: 2px;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 60px;
+      background: #f5faff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 12px;
+    }
+
+    .dates div:hover {
+      background: #dceeff;
+    }
+
+    .today {
+      background: #4a90e2 !important;
+      color: white;
+    }
+
+    .event {
+      font-size: 10px;
+      margin-top: 3px;
+      background: #a7c7ff;
+      padding: 2px 4px;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    /* 📱 모바일 대응 */
+    @media (max-width: 480px) {
+      .calendar {
+        padding: 15px;
+      }
+
+      .header h2 {
+        font-size: 16px;
+      }
+
+      .dates div {
+        min-height: 50px;
+        font-size: 11px;
+      }
+
+      .event {
+        font-size: 9px;
+      }
+    }
+
+    /* 📱 태블릿 대응 */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .calendar {
+        max-width: 90%;
+      }
+
+      .dates div {
+        min-height: 65px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="calendar">
+  <div class="header">
+    <button onclick="prevMonth()">◀</button>
+    <h2 id="monthYear"></h2>
+    <button onclick="nextMonth()">▶</button>
+  </div>
+
+  <div class="days">
+    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+  </div>
+
+  <div class="dates" id="dates"></div>
+</div>
+
+<script>
+  const datesEl = document.getElementById("dates");
+  const monthYearEl = document.getElementById("monthYear");
+
+  let currentDate = new Date();
+  let events = JSON.parse(localStorage.getItem("events") || "{}");
+
+  function renderCalendar() {
+    datesEl.innerHTML = "";
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    monthYearEl.textContent = `${year}년 ${month + 1}월`;
+
+    for (let i = 0; i < firstDay; i++) {
+      datesEl.innerHTML += "<div></div>";
+    }
+
+    for (let i = 1; i <= lastDate; i++) {
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${i}</strong>`;
+
+      const today = new Date();
+      if (
+        i === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear()
+      ) {
+        div.classList.add("today");
+      }
+
+      const key = `${year}-${month}-${i}`;
+      if (events[key]) {
+        events[key].forEach(e => {
+          const ev = document.createElement("div");
+          ev.className = "event";
+          ev.textContent = e;
+          div.appendChild(ev);
+        });
+      }
+
+      div.onclick = () => {
+        const text = prompt("일정을 입력하세요");
+        if (!text) return;
+
+        if (!events[key]) events[key] = [];
+        events[key].push(text);
+
+        localStorage.setItem("events", JSON.stringify(events));
+        renderCalendar();
+      };
+
+      datesEl.appendChild(div);
+    }
+  }
+
+  function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }
+
+  renderCalendar();
+</script>
+
+</body>
+</html>
